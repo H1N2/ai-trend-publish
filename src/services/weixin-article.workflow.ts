@@ -32,35 +32,69 @@ import { EmbeddingProviderType } from "@src/providers/interfaces/embedding.inter
 import { VectorSimilarityUtil } from "@src/utils/VectorSimilarityUtil.ts";
 const logger = new Logger("weixin-article-workflow");
 
+/**
+ * 微信工作流环境接口
+ * 定义了微信工作流所需的环境变量
+ */
 interface WeixinWorkflowEnv {
+  /** 工作流名称 */
   name: string;
 }
 
-// 工作流参数类型定义
+/**
+ * 工作流参数类型定义
+ * 定义了微信工作流执行时可接受的参数
+ */
 interface WeixinWorkflowParams {
+  /** 数据源类型 */
   sourceType?: "all" | "firecrawl" | "twitter";
+  /** 最大文章数 */
   maxArticles?: number;
+  /** 是否强制发布 */
   forcePublish?: boolean;
 }
 
+/**
+ * 微信文章工作流类
+ * 负责从多个数据源抓取内容，进行AI处理（摘要、去重、排名），然后发布到微信公众号
+ */
 export class WeixinArticleWorkflow
   extends WorkflowEntrypoint<WeixinWorkflowEnv, WeixinWorkflowParams> {
+  /** 数据源抓取器映射 */
   private scraper: Map<string, ContentScraper>;
+  /** 内容摘要器 */
   private summarizer: ContentSummarizer;
+  /** 微信发布器 */
   private publisher: WeixinPublisher;
+  /** Bark通知器 */
   private notifier: BarkNotifier;
+  /** 微信文章模板渲染器 */
   private renderer: WeixinArticleTemplateRenderer;
+  /** 内容排名器 */
   private contentRanker: ContentRanker;
+  /** 向量服务 */
   private vectorService: VectorService;
+  /** 向量嵌入模型 */
   private embeddingModel!: EmbeddingProvider;
+  /** 已存在的向量数据 */
   private existingVectors: { vector: number[]; content: string | null }[] = [];
+  /** 工作流统计信息 */
   private stats = {
+    /** 成功处理的数据源数量 */
     success: 0,
+    /** 失败的数据源数量 */
     failed: 0,
+    /** 获取到的内容总数 */
     contents: 0,
+    /** 重复内容数量 */
     duplicates: 0,
   };
 
+  /**
+   * 构造函数
+   * 初始化各种服务和组件
+   * @param env 工作流环境
+   */
   constructor(env: WorkflowEnv<WeixinWorkflowEnv>) {
     super(env);
     this.scraper = new Map<string, ContentScraper>();
@@ -74,10 +108,20 @@ export class WeixinArticleWorkflow
     this.vectorService = new VectorService();
   }
 
+  /**
+   * 获取工作流统计信息
+   * @param eventId 事件ID
+   * @returns 工作流统计信息
+   */
   public getWorkflowStats(eventId: string) {
     return this.metricsCollector.getWorkflowEventMetrics(this.env.id, eventId);
   }
 
+  /**
+   * 执行微信文章工作流
+   * @param event 工作流事件
+   * @param step 工作流步骤
+   */
   async run(
     event: WorkflowEvent<WeixinWorkflowParams>,
     step: WorkflowStep,
@@ -473,6 +517,13 @@ export class WeixinArticleWorkflow
     }
   }
 
+  /**
+   * 抓取数据源内容
+   * @param type 数据源类型
+   * @param source 数据源配置
+   * @param scraper 抓取器实例
+   * @returns 抓取到的内容列表
+   */
   private async scrapeSource(
     type: string,
     source: { identifier: string },
@@ -495,6 +546,10 @@ export class WeixinArticleWorkflow
     }
   }
 
+  /**
+   * 处理内容（生成摘要等）
+   * @param content 待处理的内容
+   */
   private async processContent(content: ScrapedContent): Promise<void> {
     try {
       const summary = await this.summarizer.summarize(JSON.stringify(content));
@@ -514,6 +569,12 @@ export class WeixinArticleWorkflow
     }
   }
 
+  /**
+   * 使用向量检查内容是否重复
+   * @param content 待检查的内容
+   * @param contentVector 内容的向量表示
+   * @returns 是否重复
+   */
   private async checkDuplicateWithVector(
     content: ScrapedContent,
     contentVector: number[],

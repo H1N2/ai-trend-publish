@@ -421,3 +421,175 @@ Content-Type: application/json
 - 定期轮换 API 密钥
 - 使用 HTTPS 传输数据
 - 限制网络访问权限
+
+# 用户使用说明文档
+
+## 1. 系统概述
+
+AI Trend Publish 是一个自动化内容聚合、处理和发布系统，旨在帮助用户自动抓取、分析、总结和发布 AI 领域的最新动态和趋势内容到微信公众号等平台。
+
+## 2. 系统功能
+
+### 2.1 核心功能
+- 自动抓取多个数据源的 AI 相关内容
+- 使用 AI 技术对内容进行分析、去重和排名
+- 自动生成高质量的内容摘要和文章
+- 支持多平台内容发布（目前支持微信公众号）
+- 提供定时任务和手动触发机制
+
+### 2.2 支持的数据源
+- FireCrawl 网页抓取
+- RSSHub RSS 订阅
+- HelloGitHub 项目推荐
+- Twitter 社交媒体内容
+- Jina Reader 网页解析
+- Jina DeepSearch 深度搜索
+
+## 3. 系统安装与配置
+
+### 3.1 环境要求
+- Deno 运行时环境（推荐 v1.40+）
+- 网络连接
+- 各服务提供商的 API 密钥
+
+### 3.2 安装步骤
+1. 克隆项目代码：
+   ```
+   git clone <repository-url>
+   cd ai-trend-publish
+   ```
+
+2. 安装 Deno（如果尚未安装）：
+   请参考 [Deno 官方安装指南](https://deno.com/manual/getting_started/installation)
+
+3. 配置环境变量：
+   复制 [.env.example](../.env.example) 文件为 .env，并根据需要填写相关配置：
+   ```
+   cp .env.example .env
+   ```
+
+### 3.3 环境变量配置说明
+
+#### 3.3.1 数据库配置
+- `DATABASE_URL`: 数据库连接字符串（如：sqlite://./db.sqlite 或 mysql://user:password@host:port/database）
+
+#### 3.3.2 微信公众号配置
+- `WEIXIN_APP_ID`: 微信公众号 AppID
+- `WEIXIN_APP_SECRET`: 微信公众号 AppSecret
+- `WEIXIN_TOKEN`: 微信公众号 Token
+- `WEIXIN_AES_KEY`: 微信公众号 EncodingAESKey（可选）
+
+#### 3.3.3 AI 服务配置
+- `DEEPSEEK_API_KEY`: DeepSeek API 密钥
+- `QWEN_API_KEY`: 通义千问 API 密钥
+- `XUNFEI_API_KEY`: 讯飞星火 API 密钥
+- `OPENAI_API_KEY`: OpenAI API 密钥
+- `JINA_API_KEY`: Jina AI API 密钥
+
+#### 3.3.4 数据源配置
+- `FIRECRAWL_API_KEY`: FireCrawl API 密钥
+- `TWITTER_BEARER_TOKEN`: Twitter API Bearer Token
+
+#### 3.3.5 通知配置
+- `BARK_URL`: Bark 通知服务 URL
+
+## 4. 系统启动
+
+### 4.1 启动开发服务器
+```
+deno task dev
+```
+
+### 4.2 启动生产服务器
+```
+deno task start
+```
+
+### 4.3 运行定时任务
+```
+deno task cron
+```
+
+## 5. 使用方法
+
+### 5.1 手动触发工作流
+系统启动后会监听 8000 端口，可以通过 JSON-RPC 接口手动触发工作流：
+
+```bash
+# 触发微信文章发布工作流
+curl -X POST http://localhost:8000 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "method": "weixinArticleWorkflow", "params": {}, "id": 1}'
+
+# 触发 AI 基准测试工作流
+curl -X POST http://localhost:8000 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "method": "weixinAIBenchWorkflow", "params": {}, "id": 2}'
+
+# 触发 HelloGitHub 工作流
+curl -X POST http://localhost:8000 \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "method": "weixinHelloGitHubWorkflow", "params": {}, "id": 3}'
+```
+
+### 5.2 配置数据源
+数据源配置在 [src/data-sources/getDataSources.ts](../src/data-sources/getDataSources.ts) 文件中定义。可以根据需要添加或修改数据源。
+
+### 5.3 配置 AI 模型
+AI 模型配置在各工作流文件中定义，可以根据需要切换不同的 AI 模型。
+
+## 6. 监控与日志
+
+### 6.1 系统日志
+系统运行时会输出日志信息到控制台，包含：
+- 系统启动信息
+- 工作流执行状态
+- 错误信息
+- 调试信息
+
+### 6.2 通知推送
+系统集成了 Bark 通知服务，关键事件会通过 Bark 推送通知。
+
+## 7. 故障排除
+
+### 7.1 常见问题
+
+#### 7.1.1 无法启动服务
+- 检查 Deno 是否正确安装
+- 检查环境变量是否正确配置
+- 检查端口是否被占用
+
+#### 7.1.2 数据源抓取失败
+- 检查对应服务的 API 密钥是否正确配置
+- 检查网络连接是否正常
+- 检查数据源 URL 是否正确
+
+#### 7.1.3 AI 处理失败
+- 检查对应 AI 服务的 API 密钥是否正确配置
+- 检查 AI 服务是否正常运行
+- 检查请求参数是否符合要求
+
+#### 7.1.4 发布失败
+- 检查微信公众号配置是否正确
+- 检查微信公众号权限是否足够
+- 检查网络连接是否正常
+
+### 7.2 日志分析
+通过查看系统日志可以定位大部分问题，重点关注 ERROR 级别的日志信息。
+
+## 8. 最佳实践
+
+### 8.1 性能优化
+- 合理配置定时任务执行时间，避免高峰期
+- 根据实际需求调整并发处理数量
+- 定期清理历史数据
+
+### 8.2 安全建议
+- 妥善保管各服务的 API 密钥
+- 定期更换密钥
+- 限制服务器访问权限
+
+### 8.3 维护建议
+- 定期备份数据库
+- 监控系统运行状态
+- 及时更新依赖库版本

@@ -4,21 +4,41 @@ import { VectorSimilarityUtil } from "../utils/VectorSimilarityUtil.ts";
 import { RowDataPacket } from "mysql2";
 import db from "@src/db/db.ts";
 
+/**
+ * 向量项接口
+ * 定义了向量数据的基本结构
+ */
 export interface VectorItem extends RowDataPacket {
+  /** 向量ID */
   id: number;
+  /** 向量对应的内容 */
   content: string | null;
+  /** 向量数据 */
   vector: number[];
+  /** 向量维度 */
   vectorDim: number | null;
+  /** 向量类型 */
   vectorType: string | null;
 }
 
+/**
+ * 相似度搜索结果接口
+ * 扩展了VectorItem，增加了相似度字段
+ */
 export interface SimilaritySearchResult extends VectorItem {
+  /** 相似度 */
   similarity: number;
 }
 
+/**
+ * 向量服务类
+ * 负责向量数据的存储、检索和相似度计算
+ */
 export class VectorService {
   /**
    * 创建新的向量记录
+   * @param data 向量数据（不包含ID）
+   * @returns 创建的向量记录
    */
   async create(
     data: Omit<VectorItem, "id" | keyof RowDataPacket>,
@@ -39,6 +59,8 @@ export class VectorService {
 
   /**
    * 批量创建向量记录
+   * @param items 向量数据数组（不包含ID）
+   * @returns 创建的向量记录数组
    */
   async createBatch(
     items: Omit<VectorItem, "id" | keyof RowDataPacket>[],
@@ -61,6 +83,8 @@ export class VectorService {
 
   /**
    * 根据ID获取向量记录
+   * @param id 向量ID
+   * @returns 向量记录或null
    */
   async getById(id: number): Promise<VectorItem | null> {
     const [result] = await db
@@ -73,6 +97,8 @@ export class VectorService {
 
   /**
    * 根据类型获取向量记录列表
+   * @param vectorType 向量类型
+   * @returns 向量记录数组
    */
   async getByType(vectorType: string): Promise<VectorItem[]> {
     const results = await db
@@ -85,6 +111,9 @@ export class VectorService {
 
   /**
    * 更新向量记录
+   * @param id 向量ID
+   * @param data 更新数据
+   * @returns 更新是否成功
    */
   async update(
     id: number,
@@ -105,6 +134,8 @@ export class VectorService {
 
   /**
    * 删除向量记录
+   * @param id 向量ID
+   * @returns 删除是否成功
    */
   async delete(id: number): Promise<boolean> {
     const [beforeDelete] = await db
@@ -123,6 +154,8 @@ export class VectorService {
 
   /**
    * 批量删除向量记录
+   * @param ids 向量ID数组
+   * @returns 删除是否成功
    */
   async deleteBatch(ids: number[]): Promise<boolean> {
     const beforeDelete = await db
@@ -143,6 +176,7 @@ export class VectorService {
    * 查找相似向量
    * @param vector 目标向量
    * @param options 查询选项
+   * @returns 相似向量结果数组
    */
   async findSimilar(
     vector: number[],
@@ -196,6 +230,8 @@ export class VectorService {
 
   /**
    * 获取向量统计信息
+   * @param vectorType 向量类型（可选）
+   * @returns 统计信息
    */
   async getStats(vectorType?: string): Promise<{
     total: number;

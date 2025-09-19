@@ -7,25 +7,52 @@ import { Buffer } from "node:buffer";
 import { Logger } from "@zilla/logger";
 const logger = new Logger("weixin-publisher");
 
+/**
+ * 微信访问令牌接口
+ * 定义了微信API访问令牌的结构
+ */
 interface WeixinToken {
+  /** 访问令牌 */
   access_token: string;
+  /** 过期时间（秒） */
   expires_in: number;
+  /** 过期时间（Date对象） */
   expiresAt: Date;
 }
 
+/**
+ * 微信草稿接口
+ * 定义了微信草稿的结构
+ */
 interface WeixinDraft {
+  /** 媒体ID */
   media_id: string;
+  /** 文章ID（可选） */
   article_id?: string;
 }
 
+/**
+ * 微信发布器类
+ * 负责将内容发布到微信公众号，包括上传图片、创建草稿和发布文章
+ */
 export class WeixinPublisher implements ContentPublisher {
+  /** 微信访问令牌 */
   private accessToken: WeixinToken | null = null;
+  /** 微信AppID */
   private appId: string | undefined;
+  /** 微信AppSecret */
   private appSecret: string | undefined;
 
+  /**
+   * 构造函数
+   */
   constructor() {
   }
 
+  /**
+   * 刷新配置
+   * 从配置管理器获取微信公众号的AppID和AppSecret
+   */
   async refresh(): Promise<void> {
     this.appId = await ConfigManager.getInstance().get("WEIXIN_APP_ID");
     this.appSecret = await ConfigManager.getInstance().get("WEIXIN_APP_SECRET");
@@ -35,6 +62,11 @@ export class WeixinPublisher implements ContentPublisher {
     });
   }
 
+  /**
+   * 确保访问令牌有效
+   * 检查现有令牌是否有效，如果无效则获取新令牌
+   * @returns 访问令牌
+   */
   private async ensureAccessToken(): Promise<string> {
     // 检查现有token是否有效
     if (
@@ -71,6 +103,14 @@ export class WeixinPublisher implements ContentPublisher {
     }
   }
 
+  /**
+   * 上传草稿到微信
+   * @param article 文章内容
+   * @param title 文章标题
+   * @param digest 文章摘要
+   * @param mediaId 封面图片媒体ID
+   * @returns 微信草稿信息
+   */
   private async uploadDraft(
     article: string,
     title: string,
@@ -123,6 +163,7 @@ export class WeixinPublisher implements ContentPublisher {
       throw error;
     }
   }
+
   /**
    * 上传图片到微信
    * @param imageUrl 图片URL

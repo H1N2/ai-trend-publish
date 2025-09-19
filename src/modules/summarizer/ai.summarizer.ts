@@ -13,16 +13,31 @@ import { ConfigManager } from "@src/utils/config/config-manager.ts";
 import { RetryUtil } from "@src/utils/retry.util.ts";
 import { Logger } from "@zilla/logger";
 
+/**
+ * 摘要器配置枚举
+ * 定义了摘要器相关的配置键
+ */
 enum SummarizarSetting {
+  /** AI摘要器使用的LLM提供商配置键 */
   AI_SUMMARIZER_LLM_PROVIDER = "AI_SUMMARIZER_LLM_PROVIDER",
 }
 
 const logger = new Logger("ai-summarizer");
 
+/**
+ * AI摘要器类
+ * 使用大语言模型对内容进行摘要和标题生成
+ */
 export class AISummarizer implements ContentSummarizer {
+  /** LLM工厂实例 */
   private llmFactory: LLMFactory;
+  /** 配置管理器实例 */
   private configInstance: ConfigManager;
 
+  /**
+   * 构造函数
+   * 初始化LLM工厂和配置管理器，并记录当前使用的LLM模型
+   */
   constructor() {
     this.llmFactory = LLMFactory.getInstance();
     this.configInstance = ConfigManager.getInstance();
@@ -33,6 +48,12 @@ export class AISummarizer implements ContentSummarizer {
     );
   }
 
+  /**
+   * 对内容进行摘要
+   * @param content 待摘要的内容
+   * @param options 摘要选项（可选）
+   * @returns 摘要结果
+   */
   async summarize(
     content: string,
     options?: Record<string, any>,
@@ -90,6 +111,12 @@ export class AISummarizer implements ContentSummarizer {
     });
   }
 
+  /**
+   * 生成内容标题
+   * @param content 待生成标题的内容
+   * @param options 标题生成选项（可选）
+   * @returns 生成的标题
+   */
   async generateTitle(
     content: string,
     options?: Record<string, any>,
